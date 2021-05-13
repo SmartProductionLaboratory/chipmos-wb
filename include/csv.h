@@ -201,7 +201,7 @@ public:
     void close();
 
     /**
-     * size() - return number of rows
+     * nrows() - return number of rows
      *
      * @return number of rows
      */
