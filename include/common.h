@@ -33,4 +33,17 @@ std::vector<T> operator+=(std::vector<T> &op1, std::vector<T> op2)
  * timeConverter() - convert text to time_t
  */
 time_t timeConverter(char *text);
+
+#define cudaCheck(err, msg)   \
+    if (err != cudaSuccess) { \
+        perror(msg);          \
+        exit(-1);             \
+    }
+
+
+
+int cmpint(const void *a, const void *b);
+
+int cmpdouble(const void *a, const void *b);
+
 #endif

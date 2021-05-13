@@ -8,7 +8,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
-
-
 file(GLOB_RECURSE src ./src/*.cpp)
 add_executable(main main.cpp ${src})
+target_link_libraries(main lib)
+add_subdirectory(lib)
+add_subdirectory(tests)
+# add_subdirectory(examples)
