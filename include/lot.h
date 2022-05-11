@@ -864,16 +864,18 @@ inline void lot_t::setPartId(std::string partid)
 
 inline void lot_t::setPartNo(std::string part_no)
 {
-    if (_tools.count(part_no) == 0) {
-        _tools[part_no] = 0;
-        __tools.push_back(part_no);
+    if (part_no.length()) {
+        if (_tools.count(part_no) == 0) {
+            _tools[part_no] = 0;
+            __tools.push_back(part_no);
+        }
+        _part_no = part_no;
     }
-    _part_no = part_no;
 }
 
 inline void lot_t::_setToolType(std::string part_no_type)
 {
-    std::string part_no;
+    std::string part_no("");
     for (auto it = _tools.begin(); it != _tools.end(); ++it) {
         if (it->second != 0 &&
             it->first.find(part_no_type) != std::string::npos) {
@@ -949,34 +951,21 @@ inline void lot_t::setCanRunModel(std::string model)
 inline void lot_t::setCanRunModels(std::vector<std::string> models)
 {
     // use models to decide the part_no
-    double rnd;
-    if (_tools.size() > 1) {
-        rnd = randomDouble();
-        if (rnd <= 0.34) {
-            _setToolType("A0801");
-        } else {
-            _setToolType("A0803");
-        }
+    int a0801 = 0;
+    foreach (models, i) {
+        a0801 +=  (models[i].compare("UTC1000") == 0 ||
+            models[i].compare("UTC1000S") == 0 ||
+            models[i].compare("UTC2000") == 0 ||
+            models[i].compare("UTC2000S") == 0 ||
+            models[i].compare("UTC3000") == 0);
     }
-    // int a0801 = 0, a0803 = 0;
-    // foreach (models, i) {
-    //     if (models[i].compare("UTC1000") == 0 ||
-    //         models[i].compare("UTC1000S") == 0 ||
-    //         models[i].compare("UTC2000") == 0 ||
-    //         models[i].compare("UTC2000S") == 0 ||
-    //         models[i].compare("UTC3000") == 0) {
-    //         ++a0801;
-    //     } else {
-    //         ++a0803;
-    //     }
-    // }
 
-    // if (a0801 > a0803) {
-    //     _setToolType("A0801");
-    // } else if (a0803 > a0801) {
-    //     _setToolType("A0803");
-    // }
-    _setToolType("A0801");
+    if (a0801) {
+        _setToolType("A0801");
+    } else {
+        _setToolType("A0803");
+    }
+
     foreach (models, i) {
         if (isModelValid(models[i])) {
             _uphs[models[i]] = 0;
