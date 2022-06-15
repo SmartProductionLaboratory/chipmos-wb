@@ -24,7 +24,7 @@ void entities_t::_readPartNoFile(std::string filename)
     csv.trim(" ");
     csv.setHeaders(map<string, string>(
         {{"process_id", "process_id"}, {"remark", "remark"}}));
-    map<string, string> pid_remark;
+    map<string, string[2]> pid_remark;
     map<string, string> row;
     string remark;
     for (int i = 0, size = csv.nrows(); i < size; ++i) {
@@ -35,7 +35,10 @@ void entities_t::_readPartNoFile(std::string filename)
             if (remark.find("(") != std::string::npos) {
                 remark = remark.substr(0, remark.find("("));
             }
-            pid_remark[row["process_id"]] = remark.substr(0, remark.find(" "));
+            if (remark.find("A0801") != std::string::npos)
+                pid_remark[row["process_id"]][0] = remark.substr(0, remark.find(" "));
+            else if (remark.find("A0803") != std::string::npos)
+                pid_remark[row["process_id"]][1] = remark.substr(0, remark.find(" "));
         }
     }
     pid_map_to_part_no = pid_remark;
@@ -114,8 +117,10 @@ entity_t *entities_t::addMachine(map<string, string> elements,
     model = elements["model"];
     location = elements["location"];
 
+    int is_utc123000s = model.compare("UTC1000") == 0 || model.compare("UTC1000S") == 0 || model.compare("UTC2000") == 0 || model.compare("UTC2000S") == 0 || model.compare("UTC3000") == 0;
+
     string prod_id = elements["prod_id"];
-    string part_no = pid_map_to_part_no[prod_map_to_pid[prod_id]];
+    string part_no = pid_map_to_part_no[prod_map_to_pid[prod_id]][!is_utc123000s];
     string part_id = bom_id_map_to_part_id[prod_map_to_bom_id[prod_id] + "_" +
                                            elements["oper"]];
     elements["part_no"] = part_no;
