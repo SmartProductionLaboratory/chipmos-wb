@@ -34,7 +34,7 @@ private:
     std::map<std::string, std::string> prod_map_to_pid;
     std::map<std::string, std::string> prod_map_to_bom_id;
     std::map<std::string, std::string> bom_id_map_to_part_id;
-    std::map<std::string, std::string> pid_map_to_part_no;
+    std::map<std::string, std::string[2]> pid_map_to_part_no;
 
     std::map<std::string, std::map<std::string, bool> > _dedicate_machines;
 
