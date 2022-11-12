@@ -45,18 +45,60 @@ static inline long fconvert_time(long time, long bias)
     return (time * 60) - bias;
 }
 
+typedef struct assign_info_args {
+    csv_t data;
+    std::vector<time_t> rtime;
+    int dir;
+} raw_info_t;
+
 class base_info_t
 {
 public:
+    base_info_t() : start(0){};
     base_info_t(std::string _entity, const time_t _start)
         : entity(_entity), start(_start){};
     std::string entity;
     const time_t start;
+
+    virtual void assign_info_vec(std::vector<base_info_t *> &info_vec,
+                                 raw_info_t raw_info) = 0;
+    void assign_info_map(
+        std::map<std::string, std::vector<base_info_t *>> &info,
+        std::vector<base_info_t *> info_vec);
+    std::map<std::string, std::vector<base_info_t *>> init_map(
+        raw_info_t raw_info);
 };
+
+std::map<std::string, std::vector<base_info_t *>> base_info_t::init_map(
+    raw_info_t raw_info)
+{
+    /* Assume start_time, end_time currently in minutes */
+    std::vector<base_info_t *> info_vec;
+    assign_info_vec(info_vec, raw_info);
+
+    /* Insert entity information */
+    std::map<std::string, std::vector<base_info_t *>> info;
+    assign_info_map(info, info_vec);
+    return info;
+}
+
+void base_info_t::assign_info_map(
+    std::map<std::string, std::vector<base_info_t *>> &info,
+    std::vector<base_info_t *> info_vec)
+{
+    std::vector<base_info_t *> temp;
+    for (auto &cur : info_vec) {
+        if (info.find(cur->entity) == info.end())
+            info.insert(std::pair<std::string, std::vector<base_info_t *>>(
+                cur->entity, temp));
+        info[cur->entity].push_back(cur);
+    }
+}
 
 class wlth_info_t : public base_info_t
 {
 public:
+    wlth_info_t() : base_info_t(), qty(0), end(0){};
     wlth_info_t(std::map<std::string, std::string> const &elements, long rtime)
         : base_info_t(elements.at("entity"),
                       fconvert_time(std::stoll(elements.at("start")), rtime)),
@@ -67,16 +109,40 @@ public:
     const int qty;
     std::string lot;
     const time_t end;
+
+    void assign_info_vec(std::vector<base_info_t *> &info_vec,
+                         raw_info_t raw_info);
 };
 
 class setup_info_t : public base_info_t
 {
 public:
+    setup_info_t() : base_info_t(){};
     setup_info_t(std::map<std::string, std::string> const &elements, long rtime)
         : base_info_t(elements.at("entity"),
                       fconvert_time(std::stoll(elements.at("start")), rtime)){};
     std::string entity;
+
+    void assign_info_vec(std::vector<base_info_t *> &info_vec,
+                         raw_info_t raw_info);
 };
+
+void wlth_info_t::assign_info_vec(std::vector<base_info_t *> &info_vec,
+                                  raw_info_t raw_info)
+{
+    for (int i = 0, size = raw_info.data.nrows(); i < size; ++i)
+        info_vec.push_back(new wlth_info_t(raw_info.data.getElements(i),
+                                           raw_info.rtime.at(raw_info.dir)));
+}
+
+void setup_info_t::assign_info_vec(std::vector<base_info_t *> &info_vec,
+                                   raw_info_t raw_info)
+{
+    for (int i = 0, size = raw_info.data.nrows(); i < size; ++i)
+        info_vec.push_back(new setup_info_t(raw_info.data.getElements(i),
+                                            raw_info.rtime.at(raw_info.dir)));
+}
+
 
 int main()
 {
@@ -112,21 +178,9 @@ int main()
                                                 {"start", "start_time"},
                                                 {"end", "end_time"}}));
 
-        /* Assume start_time, end_time currently in minutes */
-        std::vector<wlth_info_t> wlths;
-        for (int i = 0, size = data.nrows(); i < size; ++i) {
-            wlths.push_back(wlth_info_t(data.getElements(i), rtime.at(dir)));
-        }
-
-        /* entity - wlth pair */
-        std::map<std::string, std::vector<wlth_info_t>> info;
-        std::vector<wlth_info_t> temp;
-        for (auto &cur : wlths) {
-            if (info.find(cur.entity) == info.end())
-                info.insert(std::pair<std::string, std::vector<wlth_info_t>>(
-                    cur.entity, temp));
-            info[cur.entity].push_back(cur);
-        }
+        wlth_info_t *wlth_dummy = new wlth_info_t();
+        std::map<std::string, std::vector<base_info_t *>> info =
+            wlth_dummy->init_map({data, rtime, dir});
 
         /* output per simulation */
         time_t base_start = 0, base_end = timeConverter(START_DATE)(END_DATE);
@@ -137,11 +191,12 @@ int main()
             time_t total = 0;
 
             for (auto &it : cur.second) {
-                if (it.end < base_start || it.start > base_end)
+                wlth_info_t *it2 = static_cast<wlth_info_t *>(it);
+                if (it2->end < base_start || it2->start > base_end)
                     continue;
-                total += MIN(it.end, base_end) - MAX(it.start, base_start);
-                if (it.end <= base_end)
-                    lqty += it.qty;
+                total += MIN(it2->end, base_end) - MAX(it2->start, base_start);
+                if (it2->end <= base_end)
+                    lqty += it2->qty;
             }
 
             gtotal += total;
@@ -181,19 +236,9 @@ int main()
         setup.setHeaders(
             std::map<std::string, std::string>({{"start", "start_time"}}));
 
-        std::vector<setup_info_t> setupd;
-        for (int i = 0, size = setup.nrows(); i < size; ++i) {
-            setupd.push_back(setup_info_t(setup.getElements(i), rtime.at(dir)));
-        }
-        /* entity - setupd pair */
-        std::map<std::string, std::vector<setup_info_t>> sinfo;
-        std::vector<setup_info_t> stemp;
-        for (auto &cur : setupd) {
-            if (sinfo.find(cur.entity) == sinfo.end())
-                sinfo.insert(std::pair<std::string, std::vector<setup_info_t>>(
-                    cur.entity, stemp));
-            sinfo[cur.entity].push_back(cur);
-        }
+        setup_info_t *setup_dummy = new setup_info_t();
+        std::map<std::string, std::vector<base_info_t *>> sinfo =
+            setup_dummy->init_map({setup, rtime, dir});
 
         std::ofstream outfile_setup("result/setup_" +
                                     conf.getElements(dir)["no"] + ".csv");
@@ -203,7 +248,7 @@ int main()
         for (auto &cur : sinfo) {
             int lsetup = 0;
             for (auto &it : cur.second) {
-                if (it.start < base_start || it.start > base_end)
+                if (it->start < base_start || it->start > base_end)
                     continue;
                 ++lsetup;
             }
