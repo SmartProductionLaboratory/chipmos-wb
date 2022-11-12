@@ -34,32 +34,48 @@
 
 #define MIN(x, y) ((x) ^ (((x) ^ (y)) & -((x) > (y))))
 
-class wlth_info_t
+/*
+ * Refactor
+ * 1. encapsulate same info
+ * 2. repeated code in function
+ */
+
+static inline long fconvert_time(long time, long bias)
+{
+    return (time * 60) - bias;
+}
+
+class base_info_t
+{
+public:
+    base_info_t(std::string _entity, const time_t _start)
+        : entity(_entity), start(_start){};
+    std::string entity;
+    const time_t start;
+};
+
+class wlth_info_t : public base_info_t
 {
 public:
     wlth_info_t(std::map<std::string, std::string> const &elements, long rtime)
-        : qty(std::stoi(elements.at("qty"))),
+        : base_info_t(elements.at("entity"),
+                      fconvert_time(std::stoll(elements.at("start")), rtime)),
+          qty(std::stoi(elements.at("qty"))),
           lot(elements.at("lot")),
-          entity(elements.at("entity")),
-          start(static_cast<time_t>(std::stod(elements.at("start")) * 60) -
-                rtime),
-          end(static_cast<time_t>(std::stod(elements.at("end")) * 60) -
-              rtime){};
+          end(fconvert_time(std::stoll(elements.at("end")), rtime)){};
 
-    int qty;
-    std::string lot, entity;
-    time_t start, end;
+    const int qty;
+    std::string lot;
+    const time_t end;
 };
 
-class setup_info_t
+class setup_info_t : public base_info_t
 {
 public:
     setup_info_t(std::map<std::string, std::string> const &elements, long rtime)
-        : entity(elements.at("entity")),
-          start(static_cast<time_t>(std::stod(elements.at("start")) * 60) -
-                rtime){};
+        : base_info_t(elements.at("entity"),
+                      fconvert_time(std::stoll(elements.at("start")), rtime)){};
     std::string entity;
-    time_t start;
 };
 
 int main()
@@ -113,12 +129,6 @@ int main()
         }
 
         /* output per simulation */
-        /*
-        std::ofstream outfile_utilization("result/utilization_" +
-        conf.getElements(dir)["no"] + ".csv"); std::ofstream
-        outfile_quantity("result/quantity_" + conf.getElements(dir)["no"] +
-        ".csv");
-        */
         time_t base_start = 0, base_end = timeConverter(START_DATE)(END_DATE);
         int gqty = 0;
         time_t gtotal = 0;
@@ -133,13 +143,7 @@ int main()
                 if (it.end <= base_end)
                     lqty += it.qty;
             }
-            /*
-            outfile_utilization << cur.first << ","
-                << (long double)(total)/(long double)(base_end) << std::endl;
 
-            outfile_quantity << cur.first << ","
-                << lqty << std::endl;
-            */
             gtotal += total;
             gqty += lqty;
         }
@@ -191,10 +195,8 @@ int main()
             sinfo[cur.entity].push_back(cur);
         }
 
-        /*
         std::ofstream outfile_setup("result/setup_" +
-        conf.getElements(dir)["no"] + ".csv");
-        */
+                                    conf.getElements(dir)["no"] + ".csv");
 
         /* output setup */
         int gsetup = 0;
@@ -205,10 +207,7 @@ int main()
                     continue;
                 ++lsetup;
             }
-            /*
-            outfile_setup << cur.first << ","
-                << lsetup << std::endl;
-            */
+            outfile_setup << cur.first << "," << lsetup << std::endl;
             gsetup += lsetup;
         }
 
