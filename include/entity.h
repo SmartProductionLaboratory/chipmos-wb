@@ -54,8 +54,6 @@ public:
     double getRecoverTime() const;
     double getOutplanTime() const;
     std::string getEntityName();
-    std::string getModelName();
-    std::string getLocation();
     std::string getRecipe();
 
     void setBaseTime(time_t time);
@@ -78,16 +76,6 @@ inline double entity_t::getOutplanTime() const
 inline std::string entity_t::getEntityName()
 {
     return _entity_name;
-}
-
-inline std::string entity_t::getModelName()
-{
-    return _model_name;
-}
-
-inline std::string entity_t::getLocation()
-{
-    return _location;
 }
 
 inline std::string entity_t::getRecipe()
