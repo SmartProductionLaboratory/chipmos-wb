@@ -404,7 +404,7 @@ vector<lot_t> lots_t::queueTimeAndQueue(vector<lot_t> lots,
                 unfinished[i].addLog(what[0],
                                      static_cast<ERROR_T>(stoi(what[1])));
                 faulty_lots.push_back(unfinished[i]);
-            } 
+            }
         }
         unfinished = das.distributeProductionCapacity();
         das.removeAllLots();

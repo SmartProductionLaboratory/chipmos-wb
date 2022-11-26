@@ -926,14 +926,16 @@ inline bool lot_t::isModelValid(std::string model)
     std::string _part_no = part_no();
     if (_part_no.find("A0801") !=
         std::string::npos) {  // if part_no contains A0801
-        return (model.compare("UTC1000") == 0 || model.compare("UTC1000S") == 0 ||
-                model.compare("UTC2000") == 0 || model.compare("UTC2000S") == 0 ||
-                model.compare("UTC3000") == 0);
+        return (
+            model.compare("UTC1000") == 0 || model.compare("UTC1000S") == 0 ||
+            model.compare("UTC2000") == 0 || model.compare("UTC2000S") == 0 ||
+            model.compare("UTC3000") == 0);
     } else if (_part_no.find("A0803") !=
                std::string::npos) {  // if part_no contains A0803
-        return (model.compare("UTC1000") != 0 && model.compare("UTC1000S") != 0 &&
-                model.compare("UTC2000") != 0 && model.compare("UTC2000S") != 0 &&
-                model.compare("UTC3000") != 0);
+        return (
+            model.compare("UTC1000") != 0 && model.compare("UTC1000S") != 0 &&
+            model.compare("UTC2000") != 0 && model.compare("UTC2000S") != 0 &&
+            model.compare("UTC3000") != 0);
     }
     return true;
 }
@@ -954,18 +956,18 @@ inline void lot_t::setCanRunModels(std::vector<std::string> models)
     // use models to decide the part_no
     int a0801 = 0, a0803 = 0;
     foreach (models, i) {
-        a0801 +=  (models[i].compare("UTC1000") == 0 ||
-            models[i].compare("UTC1000S") == 0 ||
-            models[i].compare("UTC2000") == 0 ||
-            models[i].compare("UTC2000S") == 0 ||
-            models[i].compare("UTC3000") == 0);
-        a0803 +=  !(models[i].compare("UTC1000") == 0 ||
-            models[i].compare("UTC1000S") == 0 ||
-            models[i].compare("UTC2000") == 0 ||
-            models[i].compare("UTC2000S") == 0 ||
-            models[i].compare("UTC3000") == 0);
+        a0801 += (models[i].compare("UTC1000") == 0 ||
+                  models[i].compare("UTC1000S") == 0 ||
+                  models[i].compare("UTC2000") == 0 ||
+                  models[i].compare("UTC2000S") == 0 ||
+                  models[i].compare("UTC3000") == 0);
+        a0803 += !(models[i].compare("UTC1000") == 0 ||
+                   models[i].compare("UTC1000S") == 0 ||
+                   models[i].compare("UTC2000") == 0 ||
+                   models[i].compare("UTC2000S") == 0 ||
+                   models[i].compare("UTC3000") == 0);
     }
-    _setToolType(a0801 > a0803? "A0801" : "A0803");
+    _setToolType(a0801 > a0803 ? "A0801" : "A0803");
 
     foreach (models, i) {
         if (isModelValid(models[i])) {

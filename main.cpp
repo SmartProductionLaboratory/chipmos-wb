@@ -237,11 +237,10 @@ void run(thread_data_t *data)
     machines->setMachineConstraintA(entities.getMachineConstraintA());
     machines->setMachineConstraintR(entities.getMachineConstraintR());
 
-    prescheduling(machines, &lots);
-    int stage2_setup_times = stage2Scheduling(
-        machines, &lots, pop.parameters.scheduling_parameters.PEAK_PERIOD);
-    pop.parameters.scheduling_parameters.MAX_SETUP_TIMES -= stage2_setup_times;
-    stage3Scheduling(machines, &lots, &pop, data->fd);
+    algorithm_base_t *scheduler = new multiple_stage_schedule(
+        machines, &lots, pop.parameters.scheduling_parameters.PEAK_PERIOD, &pop,
+        data->fd);
+    scheduler->schedule();
 
     csv_t result(DIRECTORY_NAME + "/result.csv", "w");
     auto outputBatchOfJobs = [&](auto jobs, int size) {

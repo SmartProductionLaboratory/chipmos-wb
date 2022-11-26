@@ -219,9 +219,11 @@ void da_stations_t::decrementProductionCapacity(lot_t &lot)
     }
 }
 
-std::vector<lot_t > da_stations_t::get_all_remaining_lots(){
+std::vector<lot_t> da_stations_t::get_all_remaining_lots()
+{
     std::vector<lot_t> lots;
-    for(auto it = _da_stations_container.begin(); it != _da_stations_container.end(); ++it){
+    for (auto it = _da_stations_container.begin();
+         it != _da_stations_container.end(); ++it) {
         lots += it->second.remaining;
     }
 

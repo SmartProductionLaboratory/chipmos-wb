@@ -13,8 +13,17 @@
 
 using namespace std;
 
+void multiple_stage_schedule::schedule()
+{
+    prescheduling(_machines, _lots);
+    int stage2_setup_times = stage2Scheduling(
+        _machines, _lots, _pop->parameters.scheduling_parameters.PEAK_PERIOD);
+    _pop->parameters.scheduling_parameters.MAX_SETUP_TIMES -=
+        stage2_setup_times;
+    stage3Scheduling(_machines, _lots, _pop, _fd);
+}
 
-void prescheduling(machines_t *machines, lots_t *lots)
+void multiple_stage_schedule::prescheduling(machines_t *machines, lots_t *lots)
 {
     vector<lot_t *> prescheduled_lots = lots->prescheduledLots();
     vector<job_t *> prescheduled_jobs;
@@ -38,7 +47,9 @@ void prescheduling(machines_t *machines, lots_t *lots)
     machines->prescheduleJobs();
 }
 
-int stage2Scheduling(machines_t *machines, lots_t *lots, double peak_period)
+int multiple_stage_schedule::stage2Scheduling(machines_t *machines,
+                                              lots_t *lots,
+                                              double peak_period)
 {
     map<string, vector<lot_t *> > groups;
     machines->setNumberOfTools(lots->amountOfTools());
@@ -73,10 +84,10 @@ int stage2Scheduling(machines_t *machines, lots_t *lots, double peak_period)
 }
 
 
-void stage3Scheduling(machines_t *machines,
-                      lots_t *lots,
-                      population_t *pop,
-                      int fd)
+void multiple_stage_schedule::stage3Scheduling(machines_t *machines,
+                                               lots_t *lots,
+                                               population_t *pop,
+                                               int fd)
 {
     machines->groupJobsByToolAndWire();
     machines->distributeTools();
