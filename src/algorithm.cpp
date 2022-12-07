@@ -16,8 +16,10 @@ using namespace std;
 void multiple_stage_schedule::schedule()
 {
     prescheduling(_machines, _lots);
+
     int stage2_setup_times = stage2Scheduling(
         _machines, _lots, _pop->parameters.scheduling_parameters.PEAK_PERIOD);
+
     _pop->parameters.scheduling_parameters.MAX_SETUP_TIMES -=
         stage2_setup_times;
     stage3Scheduling(_machines, _lots, _pop, _fd);
@@ -27,12 +29,14 @@ void multiple_stage_schedule::prescheduling(machines_t *machines, lots_t *lots)
 {
     vector<lot_t *> prescheduled_lots = lots->prescheduledLots();
     vector<job_t *> prescheduled_jobs;
+
     foreach (prescheduled_lots, i) {
         job_t *job = new job_t();
         try {
             string prescheduled_model = machines->getModelByEntityName(
                 prescheduled_lots[i]->preScheduledEntity());
             prescheduled_lots[i]->setPrescheduledModel(prescheduled_model);
+
             *job = prescheduled_lots[i]->job();
             machines->addPrescheduledJob(job);
             prescheduled_jobs.push_back(job);
@@ -54,28 +58,28 @@ int multiple_stage_schedule::stage2Scheduling(machines_t *machines,
     map<string, vector<lot_t *> > groups;
     machines->setNumberOfTools(lots->amountOfTools());
     machines->setNumberOfWires(lots->amountOfWires());
-
     machines->setupToolAndWire();
 
-
     groups = lots->getLotsRecipeGroups();
-
     for (auto it = groups.begin(); it != groups.end(); it++) {
         vector<job_t *> jobs;
+        string current_group = it->first;
         foreach (it->second, i) {
-            string lot_number = it->second[i]->lotNumber();
-            it->second[i]->setCanRunLocation(machines->getModelLocations());
-            machines->addJobLocation(it->second[i]->lotNumber(),
-                                     it->second[i]->getCanRunLocations());
-            machines->addJobProcessTimes(it->second[i]->lotNumber(),
-                                         it->second[i]->getModelProcessTimes());
+            lot_t *current_lot = it->second[i];
+            string lot_number = current_lot->lotNumber();
+
+            current_lot->setCanRunLocation(machines->getModelLocations());
+            machines->addJobLocation(current_lot->lotNumber(),
+                                     current_lot->getCanRunLocations());
+            machines->addJobProcessTimes(current_lot->lotNumber(),
+                                         current_lot->getModelProcessTimes());
+
             job_t *job = new job_t();
-            *job = it->second[i]->job();
-            job->base.ptr_derived_object = job;
-            job->list.ptr_derived_object = job;
+            *job = current_lot->job();
+            job->base.ptr_derived_object = job->list.ptr_derived_object = job;
             jobs.push_back(job);
         }
-        machines->addGroupJobs(it->first, jobs);
+        machines->addGroupJobs(current_group, jobs);
     }
     machines->distributeOrphanMachines(peak_period);
     // TODO: add entity_limit
@@ -95,14 +99,13 @@ void multiple_stage_schedule::stage3Scheduling(machines_t *machines,
     // TODO: add entity limit
     machines->chooseMachinesForGroups();
 
-
     machine_t **machine_array;
+    job_t **jobs;
+
     int NUMBER_OF_MACHINES;
+    int NUMBER_OF_JOBS;
 
     machines->prepareMachines(&NUMBER_OF_MACHINES, &machine_array);
-
-    job_t **jobs;
-    int NUMBER_OF_JOBS;
     machines->prepareJobs(&NUMBER_OF_JOBS, &jobs);
 
     pop->objects.NUMBER_OF_JOBS = NUMBER_OF_JOBS;
@@ -110,13 +113,13 @@ void multiple_stage_schedule::stage3Scheduling(machines_t *machines,
     pop->objects.jobs = jobs;
     pop->objects.machines = machine_array;
 
-    prepareChromosomes(&pop->chromosomes, pop->objects.NUMBER_OF_JOBS,
-                       pop->parameters.AMOUNT_OF_R_CHROMOSOMES);
-
     pop->operations.machine_ops =
         machines->getInitilizedMachineBaseOperations();
     pop->operations.job_ops = machines->getInitializedJobBaseOperations();
     pop->operations.list_ops = machines->getInitializedListOperations();
+
+    prepareChromosomes(&pop->chromosomes, pop->objects.NUMBER_OF_JOBS,
+                       pop->parameters.AMOUNT_OF_R_CHROMOSOMES);
 
     // cout << "Number of machines : " << pop->objects.NUMBER_OF_MACHINES <<
     // endl; cout << "Number of jobs : " << pop->objects.NUMBER_OF_JOBS << endl;
@@ -138,6 +141,7 @@ void prepareChromosomes(chromosome_base_t **_chromosomes,
             (double *) malloc(sizeof(double) * chromosomes[i].gene_size);
         chromosomes[i].ms_genes = chromosomes[i].genes;
         chromosomes[i].os_genes = chromosomes[i].genes + NUMBER_OF_JOBS;
+
         random(chromosomes[i].genes, chromosomes[i].gene_size);
     }
     *_chromosomes = chromosomes;
@@ -162,6 +166,7 @@ void chromosomeSelection(chromosome_base_t *chromosomes,
     double sum0 = 0, sum1 = 0;
     double accumulate = 0;
     double rnd = 0;
+
     int elites_amount = AMOUNT_OF_CHROMOSOMES * elites_rate;
     int random_amount = AMOUNT_OF_CHROMOSOMES - elites_amount;
     vector<chromosome_linker_t> linkers;
@@ -193,23 +198,28 @@ void geneticAlgorithm(population_t *pop, int fd)
     int AMOUNT_OF_JOBS = pop->objects.NUMBER_OF_JOBS;
     int NUMBER_OF_MACHINES = pop->objects.NUMBER_OF_MACHINES;
     int MAX_SETUP_TIMES = pop->parameters.MAX_SETUP_TIMES;
+
     job_t **jobs = pop->objects.jobs;
+
     chromosome_base_t *chromosomes = pop->chromosomes;
     chromosome_base_t *tmp_chromosomes;
-    prepareChromosomes(&tmp_chromosomes, AMOUNT_OF_JOBS,
-                       pop->parameters.AMOUNT_OF_R_CHROMOSOMES);
+
     machine_t **machines = pop->objects.machines;
     // map<unsigned int, machine_t *> machines = pop->round.machines;
+
+    prepareChromosomes(&tmp_chromosomes, AMOUNT_OF_JOBS,
+                       pop->parameters.AMOUNT_OF_R_CHROMOSOMES);
 
     // ops
     machine_base_operations_t *machine_ops = pop->operations.machine_ops;
     list_operations_t *list_ops = pop->operations.list_ops;
     job_base_operations_t *job_ops = pop->operations.job_ops;
+
     // initialize machine_op
     int k;
-
     char output_string[1024];
     int string_length = 0;
+
     for (k = 0; k < pop->parameters.GENERATIONS && !stop; ++k) {
         for (int i = 0; i < pop->parameters.AMOUNT_OF_R_CHROMOSOMES;
              ++i) {  // for all chromosomes
