@@ -13,6 +13,7 @@
 #include "include/csv.h"
 #include "include/infra.h"
 #include "include/job.h"
+#include "include/lot_base.h"
 #include "include/time_converter.h"
 
 #define ERROR_TABLE                                                         \
@@ -50,23 +51,14 @@ extern const char *ERROR_NAMES[];
 extern const int DA_STATIONS[];
 extern const int NUMBER_OF_DA_STATIONS;
 
-class lot_t
+class lot_t : public lot_base_t
 {
 protected:
     std::string _route;
-    std::string _lot_number;
-    std::string _pin_package;
-    std::string _recipe;
-    std::string _prod_id;
     std::string _process_id;
     std::string _bom_id;
-    std::string _part_id;
-    std::string _pkg_id;
-    std::string _part_no;
-
 
     std::string _urgent;
-    std::string _customer;
     std::string _wb_location;
     std::string _prescheduled_machine;
     std::string _prescheduled_model;
@@ -74,21 +66,11 @@ protected:
     std::string _last_location;
     std::string _wlot_last_trans;
 
-    int _qty;
-    int _oper;
     int _lot_size;
     int _sub_lots;
     int _amount_of_wires;
-    int _number_of_tools;
     int _prescheduled_order;
 
-    bool _hold;
-    bool _mvin;
-    bool _is_sub_lot;
-    bool _is_automotive;
-    bool _spr_hot;
-
-    double _cr;
     double _queue_time;  // for all queue time;
     double _fcst_time;   // for DA fcst time
     double _outplan_time;
@@ -100,15 +82,10 @@ protected:
     bool _finish_traversal;
 
     std::vector<std::string> __tools;
-    std::vector<std::string> _log;
     std::vector<std::string> _all_models;
-    std::vector<std::string> _can_run_models;
-    std::vector<std::string> _can_run_locations;
 
     std::map<std::string, double> _uphs;
     std::map<std::string, double> _model_process_times;
-
-    std::map<std::string, int> _tools;
 
     // TODO : should be removed
     enum ERROR_T _status;

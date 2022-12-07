@@ -179,7 +179,7 @@ lot_t::lot_t(std::map<std::string, std::string> elements) : _last_location("")
     tmp_oper = stoi(elements["dest_oper"]);
     _sub_lots = std::stoi(elements["sub_lot"]);
 
-    _amount_of_wires = stoi(elements["amount_of_wires"]);
+    _number_of_wires = stoi(elements["amount_of_wires"]);
 
     int _number_of_tools = stoi(elements["amount_of_tools"]);
     std::string _part_no = elements["part_no"];
@@ -334,7 +334,7 @@ std::map<std::string, std::string> lot_t::data()
     d["oper"] = std::to_string(_oper);
     d["dest_oper"] = std::to_string(tmp_oper);
     d["lot_size"] = std::to_string(_lot_size);
-    d["amount_of_wires"] = std::to_string(_amount_of_wires);
+    d["amount_of_wires"] = std::to_string(_number_of_wires);
     try {
         d["amount_of_tools"] = std::to_string(getAmountOfTools());
     } catch (std::logic_error &e) {
