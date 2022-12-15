@@ -155,10 +155,13 @@ chromosome_base_t searchChromosome(double rnd,
 
 void chromosomeSelection(chromosome_base_t *chromosomes,
                          chromosome_base_t *tmp_chromosomes,
-                         double elites_rate,
-                         int AMOUNT_OF_CHROMOSOMES,
-                         int AMOUNT_OF_R_CHROMOSOMES)
+                         population_selection_t selection_obj)
 {
+    double elites_rate = selection_obj.SELECTION_RATE;
+    int AMOUNT_OF_CHROMOSOMES = selection_obj.parameters.AMOUNT_OF_CHROMOSOMES;
+    int AMOUNT_OF_R_CHROMOSOMES =
+        selection_obj.parameters.AMOUNT_OF_R_CHROMOSOMES;
+
     double sum0 = 0, sum1 = 0;
     double accumulate = 0;
     double rnd = 0;
@@ -189,6 +192,93 @@ void chromosomeSelection(chromosome_base_t *chromosomes,
     }
 }
 
+void geneticAlgorithm(population_t *pop, int fd)
+{
+    population_base_t base = population_base_t(
+        pop->no, pop->chromosomes, pop->parameters.AMOUNT_OF_CHROMOSOMES,
+        pop->parameters.AMOUNT_OF_CHROMOSOMES, pop->parameters.GENERATIONS,
+        pop->objects.jobs, pop->objects.machines, pop->objects.NUMBER_OF_JOBS,
+        pop->objects.NUMBER_OF_MACHINES);
+
+    population_prepare_t prepare_obj = population_prepare_t(base);
+
+    population_selection_t select_obj =
+        population_selection_t(base, pop->parameters.SELECTION_RATE);
+
+    population_crossover_t crossover_obj =
+        population_crossover_t(base, pop->parameters.EVOLUTION_RATE);
+
+    population_decoding_t decoding_obj = population_decoding_t(
+        base, pop->parameters.weights, pop->parameters.setup_times_parameters,
+        pop->parameters.scheduling_parameters,
+        pop->parameters.transportation_time_table, pop->operations.list_ops,
+        pop->operations.job_ops, pop->operations.machine_ops);
+
+    // place holder objects
+    machine_t **machines = base.objects.machines;
+    chromosome_base_t *chromosomes = base.chromosomes;
+    chromosome_base_t *tmp_chromosomes;
+
+    // main loop variables
+    int NUMBER_OF_JOBS = base.objects.NUMBER_OF_JOBS;
+    int NUMBER_OF_MACHINES = base.objects.NUMBER_OF_MACHINES;
+    int AMOUNT_OF_R_CHROMOSOMES = base.parameters.AMOUNT_OF_R_CHROMOSOMES;
+    int AMOUNT_OF_CHROMOSOMES = base.parameters.AMOUNT_OF_CHROMOSOMES;
+    int generations = base.parameters.GENERATIONS;
+
+    // initialize machine_op
+    char output_string[1024];
+    int string_length = 0;
+
+    prepareChromosomes(&tmp_chromosomes, NUMBER_OF_JOBS,
+                       AMOUNT_OF_R_CHROMOSOMES);
+
+    for (int k = 0; k < generations && !stop; ++k) {
+        for (int i = 0; i < AMOUNT_OF_R_CHROMOSOMES;
+             ++i) {  // for all chromosomes
+            chromosomes[i].fitnessValue =
+                decoding(chromosomes[i], decoding_obj);
+        }
+        // sort the chromosomes
+        qsort(chromosomes, AMOUNT_OF_R_CHROMOSOMES, sizeof(chromosomes[0]),
+              chromosomeCmp);
+        string_length =
+            printf("%d/%d-%lf\n", k, generations, chromosomes[0].fitnessValue);
+        // fprintf(stdout, output_string);
+        // write(1, output_string, string_length);
+        // statistic
+        chromosomeSelection(chromosomes, tmp_chromosomes, select_obj);
+
+        // evolution
+        // crossover
+        int crossover_amount =
+            AMOUNT_OF_CHROMOSOMES * crossover_obj.EVOLUTION_RATE;
+        for (int l = AMOUNT_OF_CHROMOSOMES;
+             l < crossover_amount + AMOUNT_OF_CHROMOSOMES; l += 2) {
+            int rnd1 = randomRange(0, AMOUNT_OF_CHROMOSOMES, -1);
+            int rnd2 = randomRange(0, AMOUNT_OF_CHROMOSOMES, rnd1);
+            crossover(chromosomes[rnd1], chromosomes[rnd2], chromosomes[l],
+                      chromosomes[l + 1]);
+        }
+        // mutation
+        for (int l = AMOUNT_OF_CHROMOSOMES + crossover_amount;
+             l < AMOUNT_OF_R_CHROMOSOMES; ++l) {
+            int rnd = randomRange(0, AMOUNT_OF_CHROMOSOMES, -1);
+            mutation(chromosomes[rnd], chromosomes[l]);
+        }
+    }
+
+    decoding(chromosomes[0], decoding_obj);
+
+    // update machines' avaliable time and set the last job
+    for (int i = 0; i < NUMBER_OF_MACHINES; ++i) {
+        setLastJobInMachine(machines[i]);
+        machines[i]->base.available_time =
+            machines[i]->current_job.base.end_time;
+    }
+}
+
+/*
 void geneticAlgorithm(population_t *pop, int fd)
 {
     int AMOUNT_OF_JOBS = pop->objects.NUMBER_OF_JOBS;
@@ -266,3 +356,4 @@ void geneticAlgorithm(population_t *pop, int fd)
             machines[i]->current_job.base.end_time;
     }
 }
+*/

@@ -44,25 +44,26 @@ void mutation(chromosome_base_t p, chromosome_base_t c)
 }
 
 double decoding(chromosome_base_t chromosome,
-                pop_objects_t objects,
-                pop_operations_t operations,
-                pop_parameters_t parameters)
+                population_decoding_t decoding_obj)
 {
-    job_t **jobs = objects.jobs;
-    machine_t **machines = objects.machines;
-    int NUMBER_OF_JOBS = objects.NUMBER_OF_JOBS;
-    int NUMBER_OF_MACHINES = objects.NUMBER_OF_MACHINES;
+    job_t **jobs = decoding_obj.objects.jobs;
+    machine_t **machines = decoding_obj.objects.machines;
+    int NUMBER_OF_JOBS = decoding_obj.objects.NUMBER_OF_JOBS;
+    int NUMBER_OF_MACHINES = decoding_obj.objects.NUMBER_OF_MACHINES;
 
-    machine_base_operations_t *machine_ops = operations.machine_ops;
-    list_operations_t *list_ops = operations.list_ops;
-    job_base_operations_t *job_ops = operations.job_ops;
+    machine_base_operations_t *machine_ops =
+        decoding_obj.operations.machine_ops;
+    list_operations_t *list_ops = decoding_obj.operations.list_ops;
+    job_base_operations_t *job_ops = decoding_obj.operations.job_ops;
 
-    int MAX_SETUP_TIMES = parameters.MAX_SETUP_TIMES;
-    weights_t weights = parameters.weights;
+    weights_t weights = decoding_obj.decoding_parameters.weights;
     std::map<std::pair<std::string, std::string>, double>
-        transportation_time_table = parameters.transportation_time_table;
-    setup_time_parameters_t scheduling_parameters =
-        parameters.setup_times_parameters;
+        transportation_time_table =
+            decoding_obj.decoding_parameters.transportation_time_table;
+    setup_time_parameters_t setup_times_parameters =
+        decoding_obj.decoding_parameters.setup_times_parameters;
+    int MAX_SETUP_TIMES =
+        decoding_obj.decoding_parameters.scheduling_parameters.MAX_SETUP_TIMES;
 
     unsigned int machine_idx;
     machine_t *machine;
@@ -92,9 +93,9 @@ double decoding(chromosome_base_t chromosome,
     int setup_times_in1440 = 0;
     for (int i = 0; i < NUMBER_OF_MACHINES; ++i) {
         scheduling(machines[i], machine_ops, weights, transportation_time_table,
-                   scheduling_parameters);
+                   setup_times_parameters);
         insertAlgorithm(machines[i], machine_ops, weights,
-                        transportation_time_table, scheduling_parameters);
+                        transportation_time_table, setup_times_parameters);
         value += machines[i]->quality;
         setup_times_in1440 += machines[i]->setup_times;
     }

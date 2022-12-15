@@ -48,4 +48,81 @@ struct population_t {
     chromosome_base_t *chromosomes;
 };
 
+class population_base_t
+{
+public:
+    population_base_t(unsigned int no,
+                      chromosome_base_t *chromosomes,
+                      int AMOUNT_OF_CHROMOSOMES,
+                      int AMOUNT_OF_R_CHROMOSOMES,
+                      int GENERATIONS,
+                      job_t **jobs,
+                      machine_t **machines,
+                      int NUMBER_OF_JOBS,
+                      int NUMBER_OF_MACHINES);
+
+    unsigned int no;
+    chromosome_base_t *chromosomes;
+
+    struct {
+        int AMOUNT_OF_CHROMOSOMES;
+        int AMOUNT_OF_R_CHROMOSOMES;
+        int GENERATIONS;
+    } parameters;
+
+    struct {
+        job_t **jobs;
+        machine_t **machines;
+        int NUMBER_OF_JOBS;
+        int NUMBER_OF_MACHINES;
+    } objects;
+};
+
+class population_prepare_t : public population_base_t
+{
+public:
+    population_prepare_t(population_base_t &base);
+};
+
+class population_selection_t : public population_base_t
+{
+public:
+    population_selection_t(population_base_t &base, double SELECTION_RATE);
+    double SELECTION_RATE;
+};
+
+class population_crossover_t : public population_base_t
+{
+public:
+    population_crossover_t(population_base_t &base, double EVOLUTION_RATE);
+    double EVOLUTION_RATE;
+};
+
+class population_decoding_t : public population_base_t
+{
+public:
+    population_decoding_t(population_base_t &base,
+                          weights_t weights,
+                          setup_time_parameters_t setup_times_parameters,
+                          scheduling_parameters_t scheduling_parameters,
+                          std::map<std::pair<std::string, std::string>, double>
+                              transportation_time_table,
+                          list_operations_t *list_ops,
+                          job_base_operations_t *job_ops,
+                          machine_base_operations_t *machine_ops);
+    struct {
+        weights_t weights;
+        setup_time_parameters_t setup_times_parameters;
+        scheduling_parameters_t scheduling_parameters;
+        std::map<std::pair<std::string, std::string>, double>
+            transportation_time_table;
+    } decoding_parameters;
+
+    struct {
+        list_operations_t *list_ops;
+        job_base_operations_t *job_ops;
+        machine_base_operations_t *machine_ops;
+    } operations;
+};
+
 #endif

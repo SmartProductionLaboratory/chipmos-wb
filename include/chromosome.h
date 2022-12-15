@@ -68,9 +68,7 @@ void copyChromosome(chromosome_base_t dest, chromosome_base_t src);
  * @return the fitness value of chromosome
  */
 double decoding(chromosome_base_t chromosome,
-                pop_objects_t objects,
-                pop_operations_t operations,
-                pop_parameters_t parameters);
+                population_decoding_t decoding_obj);
 
 /**
  * chromosomeCmp () : The comparison of two chromosomes.

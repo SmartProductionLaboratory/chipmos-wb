@@ -15,6 +15,7 @@ set(src_files
         lots.cpp
         machines.cpp
         machine.cpp
+        population.cpp
         route.cpp
         record_gap.cpp
         machine_constraint.cpp
