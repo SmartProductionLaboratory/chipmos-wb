@@ -284,6 +284,8 @@ public:
     void chooseMachinesForGroups();
 
     void setupToolAndWire();
+    void setupToolAndWire(std::map<std::string, int> number_of_tools,
+                          std::map<std::string, int> number_of_wires);
 
     void reconsiderJobs();
 

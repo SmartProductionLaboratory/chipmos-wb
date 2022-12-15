@@ -8,6 +8,7 @@
 #include "include/job_base.h"
 #include "include/machine.h"
 #include "include/parameters.h"
+#include "include/population.h"
 
 /**
  * struct chromosome_linker : linker is used to link the chromosome_base_t
@@ -67,18 +68,9 @@ void copyChromosome(chromosome_base_t dest, chromosome_base_t src);
  * @return the fitness value of chromosome
  */
 double decoding(chromosome_base_t chromosome,
-                job_t **jobs,
-                machine_t **machines,
-                machine_base_operations_t *machine_ops,
-                list_operations_t *list_ops,
-                job_base_operations_t *job_ops,
-                int NUMBER_OF_JOBS,
-                int NUMBER_OF_MACHINES,
-                int MAX_SETUP_TIMES,
-                weights_t weights,
-                std::map<std::pair<std::string, std::string>, double>
-                    &transportation_time_table,
-                setup_time_parameters_t scheduling_parameters);
+                pop_objects_t objects,
+                pop_operations_t operations,
+                pop_parameters_t parameters);
 
 /**
  * chromosomeCmp () : The comparison of two chromosomes.

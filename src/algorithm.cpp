@@ -55,18 +55,14 @@ int multiple_stage_schedule::stage2Scheduling(machines_t *machines,
                                               lots_t *lots,
                                               double peak_period)
 {
-    map<string, vector<lot_t *> > groups;
-    machines->setNumberOfTools(lots->amountOfTools());
-    machines->setNumberOfWires(lots->amountOfWires());
-    machines->setupToolAndWire();
+    machines->setupToolAndWire(lots->amountOfTools(), lots->amountOfWires());
 
-    groups = lots->getLotsRecipeGroups();
+    map<string, vector<lot_t *> > groups = lots->getLotsRecipeGroups();
     for (auto it = groups.begin(); it != groups.end(); it++) {
         vector<job_t *> jobs;
         string current_group = it->first;
         foreach (it->second, i) {
             lot_t *current_lot = it->second[i];
-            string lot_number = current_lot->lotNumber();
 
             current_lot->setCanRunLocation(machines->getModelLocations());
             machines->addJobLocation(current_lot->lotNumber(),
@@ -216,19 +212,18 @@ void geneticAlgorithm(population_t *pop, int fd)
     job_base_operations_t *job_ops = pop->operations.job_ops;
 
     // initialize machine_op
-    int k;
     char output_string[1024];
     int string_length = 0;
 
-    for (k = 0; k < pop->parameters.GENERATIONS && !stop; ++k) {
-        for (int i = 0; i < pop->parameters.AMOUNT_OF_R_CHROMOSOMES;
+    int generations = pop->parameters.GENERATIONS;
+    int AMOUNT_OF_R_CHROMOSOMES = pop->parameters.AMOUNT_OF_R_CHROMOSOMES;
+    int AMOUNT_OF_CHROMOSOMES = pop->parameters.AMOUNT_OF_CHROMOSOMES;
+
+    for (int k = 0; k < generations && !stop; ++k) {
+        for (int i = 0; i < AMOUNT_OF_R_CHROMOSOMES;
              ++i) {  // for all chromosomes
-            chromosomes[i].fitnessValue =
-                decoding(chromosomes[i], jobs, machines, machine_ops, list_ops,
-                         job_ops, AMOUNT_OF_JOBS, NUMBER_OF_MACHINES,
-                         MAX_SETUP_TIMES, pop->parameters.weights,
-                         pop->parameters.transportation_time_table,
-                         pop->parameters.setup_times_parameters);
+            chromosomes[i].fitnessValue = decoding(
+                chromosomes[i], pop->objects, pop->operations, pop->parameters);
         }
         // sort the chromosomes
         qsort(chromosomes, pop->parameters.AMOUNT_OF_R_CHROMOSOMES,
@@ -247,13 +242,10 @@ void geneticAlgorithm(population_t *pop, int fd)
         // crossover
         int crossover_amount = pop->parameters.AMOUNT_OF_CHROMOSOMES *
                                pop->parameters.EVOLUTION_RATE;
-        for (int l = pop->parameters.AMOUNT_OF_CHROMOSOMES;
-             l < crossover_amount + pop->parameters.AMOUNT_OF_CHROMOSOMES;
-             l += 2) {
-            int rnd1 =
-                randomRange(0, pop->parameters.AMOUNT_OF_CHROMOSOMES, -1);
-            int rnd2 =
-                randomRange(0, pop->parameters.AMOUNT_OF_CHROMOSOMES, rnd1);
+        for (int l = AMOUNT_OF_CHROMOSOMES;
+             l < crossover_amount + AMOUNT_OF_CHROMOSOMES; l += 2) {
+            int rnd1 = randomRange(0, AMOUNT_OF_CHROMOSOMES, -1);
+            int rnd2 = randomRange(0, AMOUNT_OF_CHROMOSOMES, rnd1);
             crossover(chromosomes[rnd1], chromosomes[rnd2], chromosomes[l],
                       chromosomes[l + 1]);
         }
@@ -265,10 +257,7 @@ void geneticAlgorithm(population_t *pop, int fd)
         }
     }
 
-    decoding(chromosomes[0], jobs, machines, machine_ops, list_ops, job_ops,
-             AMOUNT_OF_JOBS, NUMBER_OF_MACHINES, MAX_SETUP_TIMES,
-             pop->parameters.weights, pop->parameters.transportation_time_table,
-             pop->parameters.setup_times_parameters);
+    decoding(chromosomes[0], pop->objects, pop->operations, pop->parameters);
 
     // update machines' avaliable time and set the last job
     for (int i = 0; i < NUMBER_OF_MACHINES; ++i) {

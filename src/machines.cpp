@@ -1132,6 +1132,14 @@ void machines_t::setupToolAndWire()
     // _setupResources(_number_of_wires, _wires, _wire_machines);
 }
 
+void machines_t::setupToolAndWire(std::map<std::string, int> number_of_tools,
+                                  std::map<std::string, int> number_of_wires)
+{
+    setNumberOfTools(number_of_tools);
+    setNumberOfWires(number_of_wires);
+    setupToolAndWire();
+}
+
 resources_t machines_t::_loadResource(
     std::vector<std::string> list,
     std::map<std::string, std::vector<ares_t *>> &resource_instances,

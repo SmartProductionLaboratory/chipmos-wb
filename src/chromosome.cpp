@@ -44,19 +44,26 @@ void mutation(chromosome_base_t p, chromosome_base_t c)
 }
 
 double decoding(chromosome_base_t chromosome,
-                job_t **jobs,
-                machine_t **machines,
-                machine_base_operations_t *machine_ops,
-                list_operations_t *list_ops,
-                job_base_operations_t *job_ops,
-                int NUMBER_OF_JOBS,
-                int NUMBER_OF_MACHINES,
-                int MAX_SETUP_TIMES,
-                weights_t weights,
-                std::map<std::pair<std::string, std::string>, double>
-                    &transportation_time_table,
-                setup_time_parameters_t scheduling_parameters)
+                pop_objects_t objects,
+                pop_operations_t operations,
+                pop_parameters_t parameters)
 {
+    job_t **jobs = objects.jobs;
+    machine_t **machines = objects.machines;
+    int NUMBER_OF_JOBS = objects.NUMBER_OF_JOBS;
+    int NUMBER_OF_MACHINES = objects.NUMBER_OF_MACHINES;
+
+    machine_base_operations_t *machine_ops = operations.machine_ops;
+    list_operations_t *list_ops = operations.list_ops;
+    job_base_operations_t *job_ops = operations.job_ops;
+
+    int MAX_SETUP_TIMES = parameters.MAX_SETUP_TIMES;
+    weights_t weights = parameters.weights;
+    std::map<std::pair<std::string, std::string>, double>
+        transportation_time_table = parameters.transportation_time_table;
+    setup_time_parameters_t scheduling_parameters =
+        parameters.setup_times_parameters;
+
     unsigned int machine_idx;
     machine_t *machine;
 
