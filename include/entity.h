@@ -13,29 +13,200 @@
 #include "include/lot.h"
 #include "include/machine.h"
 
-enum machine_status {
-    SETUP,
-    QC,
-    WAIT_SETUP,
-    ENG,
-    STOP,
-    WAIT_REPAIR,
-    IN_REPAIR,
-    IDLE,
-    PM,
-    RUNNING,
+class machine_status
+{
+protected:
+    bool has_lot;
+    job_t &current_job, &prev_job;
+    std::map<std::string, std::string> elements;
+    machine_base_operations_t *ops;
+
+public:
+    machine_status(job_t &current_job,
+                   job_t &prev_job,
+                   std::map<std::string, std::string> elements,
+                   bool has_lot,
+                   machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &_ptime,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+    void set_base(double &_outplan_time,
+                  double &_recover_time,
+                  double &_intime,
+                  time_t &base_time);
+    void wait(double &_outplan_time);
+};
+
+class setup_machine_status : public machine_status
+{
+public:
+    setup_machine_status(job_t &current_job,
+                         job_t &prev_job,
+                         std::map<std::string, std::string> elements,
+                         bool has_lot,
+                         machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &_ptime,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+};
+
+class qc_machine_status : public machine_status
+{
+public:
+    qc_machine_status(job_t &current_job,
+                      job_t &prev_job,
+                      std::map<std::string, std::string> elements,
+                      bool has_lot,
+                      machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+    void set_base(double &_outplan_time,
+                  double &_recover_time,
+                  double &_intime,
+                  time_t &base_time);
+};
+
+class wait_setup_machine_status : public machine_status
+{
+public:
+    wait_setup_machine_status(job_t &current_job,
+                              job_t &prev_job,
+                              std::map<std::string, std::string> elements,
+                              bool has_lot,
+                              machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+    void wait(double &_outplan_time);
+};
+
+class eng_machine_status : public machine_status
+{
+public:
+    eng_machine_status(job_t &current_job,
+                       job_t &prev_job,
+                       std::map<std::string, std::string> elements,
+                       bool has_lot,
+                       machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+    void wait(double &_outplan_time);
+};
+
+class stop_machine_status : public machine_status
+{
+public:
+    stop_machine_status(job_t &current_job,
+                        job_t &prev_job,
+                        std::map<std::string, std::string> elements,
+                        bool has_lot,
+                        machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+};
+
+class wait_repair_machine_status : public machine_status
+{
+public:
+    wait_repair_machine_status(job_t &current_job,
+                               job_t &prev_job,
+                               std::map<std::string, std::string> elements,
+                               bool has_lot,
+                               machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+};
+
+class in_repair_machine_status : public machine_status
+{
+public:
+    in_repair_machine_status(job_t &current_job,
+                             job_t &prev_job,
+                             std::map<std::string, std::string> elements,
+                             bool has_lot,
+                             machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+};
+
+class idle_machine_status : public machine_status
+{
+public:
+    idle_machine_status(job_t &current_job,
+                        job_t &prev_job,
+                        std::map<std::string, std::string> elements,
+                        bool has_lot,
+                        machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+};
+
+class pm_machine_status : public machine_status
+{
+public:
+    pm_machine_status(job_t &current_job,
+                      job_t &prev_job,
+                      std::map<std::string, std::string> elements,
+                      bool has_lot,
+                      machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
+};
+
+class running_machine_status : public machine_status
+{
+public:
+    running_machine_status(job_t &current_job,
+                           job_t &prev_job,
+                           std::map<std::string, std::string> elements,
+                           bool has_lot,
+                           machine_base_operations_t *ops);
+    void handle_status(double &_outplan_time,
+                       double &p_time,
+                       double &_setup_time,
+                       time_t &base_time);
+    void set_start(double &start_time, double _recover_time, double _ptime);
 };
 
 class entity_t
 {
 private:
+    machine_status *_status;
+
     double _recover_time;
     double _outplan_time;
     double _intime;
     double _setup_time;
     double _ptime;
     double _ent_weight;
-    enum machine_status _status;
+
     std::string _entity_name;
     std::string _model_name;
     std::string _location;

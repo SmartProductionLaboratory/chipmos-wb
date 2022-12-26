@@ -337,8 +337,6 @@ void csv_t::addData(std::map<std::string, std::string> elements)
         setHeaders(head);
     }
 
-
-
     for (std::map<std::string, std::string>::iterator it = elements.begin();
          it != elements.end(); ++it) {
         try {
@@ -402,8 +400,9 @@ std::vector<std::string> csv_t::getRow(int row)
     int idx;
     if (row < 0) {
         idx = (int) _data.size() + row;
-    } else
+    } else {
         idx = row;
+    }
     return _data.at(idx);
 }
 
@@ -511,11 +510,7 @@ void csv_t::dropNullRow()
     std::vector<std::vector<std::string> > data = _data;
     _data.clear();
     foreach (data, i) {
-        if (data[i].size() == 1) {
-            if (data[i][0].length() != 0) {
-                _data.push_back(data[i]);
-            }
-        } else {
+        if (data[i].size() != 1 || data[i][0].length() != 0) {
             _data.push_back(data[i]);
         }
     }
