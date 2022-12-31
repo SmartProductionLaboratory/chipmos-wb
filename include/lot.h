@@ -51,6 +51,13 @@ extern const char *ERROR_NAMES[];
 extern const int DA_STATIONS[];
 extern const int NUMBER_OF_DA_STATIONS;
 
+static inline bool isUTC123000s(std::string model)
+{
+    return (model.compare("UTC1000") == 0 || model.compare("UTC1000S") == 0 ||
+            model.compare("UTC2000") == 0 || model.compare("UTC2000S") == 0 ||
+            model.compare("UTC3000") == 0);
+}
+
 class lot_t : public lot_base_t
 {
 protected:
